@@ -28,7 +28,6 @@
 
   <main class="max-w-6xl mx-auto px-4 py-6">
     
-    <!-- Token Invoer -->
     <div id="token-banner" class="bg-stone-900 text-white p-4 rounded-2xl mb-6 shadow-sm">
       <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-emerald-400">Replicate API Token</label>
       <div class="flex gap-2">
@@ -125,7 +124,7 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          const maxDim = 512;
+          const maxDim = 400;
           let width = img.width;
           let height = img.height;
 
@@ -146,7 +145,7 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
           if (type === 'user') {
             userBase64 = resizedBase64;
@@ -185,10 +184,10 @@
       statusText.innerText = "Verzoek naar AI-server sturen...";
 
       try {
-        const response = await fetch("https://corsproxy.io/?" + encodeURIComponent("https://api.replicate.com/v1/predictions"), {
+        const response = await fetch("https://api.replicate.com/v1/predictions", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            "Authorization": "Bearer " + token,
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
@@ -224,8 +223,8 @@
       
       const interval = setInterval(async () => {
         try {
-          const res = await fetch("https://corsproxy.io/?" + encodeURIComponent(getUrl), {
-            headers: { "Authorization": `Bearer ${token}` }
+          const res = await fetch(getUrl, {
+            headers: { "Authorization": "Bearer " + token }
           });
           const prediction = await res.json();
 
@@ -245,7 +244,7 @@
             statusText.innerText = "AI berekent pasvorm... (" + prediction.status + ")";
           }
         } catch (e) {
-          // Tijdelijke fouten negeren
+          //
         }
       }, 3000);
     }
