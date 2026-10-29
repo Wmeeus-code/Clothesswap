@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TryOn AI - Virtuele Pasbeurt</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f7f6f2; }
+  </style>
+</head>
+<body class="bg-[#f7f6f2] text-stone-800">
+
+  <header class="bg-white border-b border-stone-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-lg">✨</div>
+        <span class="text-xl font-bold tracking-tight">TryOn <span class="text-emerald-600">AI</span></span>
+      </div>
+      <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        API Verbonden
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    
+    <!-- Token Invoer -->
+    <div class="bg-emerald-900 text-white p-4 rounded-2xl mb-6 shadow-sm">
+      <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-emerald-200">Replicate API Token</label>
+      <div class="flex gap-2">
+        <input type="password" id="api-token-input" placeholder="Plak hier je token (r8_...)" class="w-full bg-white/10 border border-emerald-700 rounded-xl px-3 py-2 text-sm text-white placeholder-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        <button onclick="saveToken()" class="bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold px-4 py-2 rounded-xl text-sm transition">Opslaan</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
