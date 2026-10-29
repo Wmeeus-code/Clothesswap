@@ -85,7 +85,6 @@
 
   <script>
     const API_TOKEN = "r8_MQkk9iiLNryXui1KX6xDVdXrzJN3m912uWCpM";
-    const WORKER_PROXY = "https://autumn-sun-4207.wmeeus.workers.dev";
 
     let userFile = null;
     let clothFile = null;
@@ -117,7 +116,6 @@
       });
       const data = await res.json();
       if (data && data.data && data.data.url) {
-        // Omzetten naar directe downloadlink voor Replicate
         return data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
       }
       throw new Error("Upload mislukt");
@@ -143,14 +141,17 @@
         const garmUrl = await uploadToTmp(clothFile);
 
         statusText.innerText = "AI verzoek opstarten...";
+        
+        // Gebruik proxy.cors.sh voor betrouwbare HTTP headers doorvoer
         const targetEndpoint = "https://api.replicate.com/v1/predictions";
-        const proxyUrl = WORKER_PROXY + "?url=" + encodeURIComponent(targetEndpoint);
+        const proxyUrl = "https://proxy.cors.sh/" + targetEndpoint;
 
         const response = await fetch(proxyUrl, {
           method: "POST",
           headers: {
             "Authorization": "Bearer " + API_TOKEN,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "x-cors-api-key": "temp_b3240eef97e5564883fcd09fb457cb14"
           },
           body: JSON.stringify({
             version: "c87eec610ab5800070c58977739717d121542dded30f2bb00337c1a84f392289",
@@ -182,12 +183,15 @@
 
     async function pollResult(getUrl) {
       const statusText = document.getElementById('status-text');
-      const pollProxyUrl = WORKER_PROXY + "?url=" + encodeURIComponent(getUrl);
+      const pollProxyUrl = "https://proxy.cors.sh/" + getUrl;
 
       const interval = setInterval(async () => {
         try {
           const res = await fetch(pollProxyUrl, {
-            headers: { "Authorization": "Bearer " + API_TOKEN }
+            headers: { 
+              "Authorization": "Bearer " + API_TOKEN,
+              "x-cors-api-key": "temp_b3240eef97e5564883fcd09fb457cb14"
+            }
           });
           const result = await res.json();
 
