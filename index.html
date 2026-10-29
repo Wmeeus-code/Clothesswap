@@ -97,7 +97,7 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          const maxDim = 512;
+          const maxDim = 400;
           let width = img.width;
           let height = img.height;
 
@@ -112,7 +112,7 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
           if (type === 'user') {
             userBase64 = dataUrl;
@@ -145,10 +145,12 @@
       spinner.classList.add('flex');
       statusText.innerText = "Verbinding maken met AI...";
 
+      // Proxy-loze aanroep met fallback
+      const targetEndpoint = "https://api.replicate.com/v1/predictions";
+      const proxyEndpoint = "https://corsproxy.io/?" + encodeURIComponent(targetEndpoint);
+
       try {
-        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent("https://api.replicate.com/v1/predictions");
-        
-        const response = await fetch(proxyUrl, {
+        let response = await fetch(proxyEndpoint, {
           method: "POST",
           headers: {
             "Authorization": "Bearer " + API_TOKEN,
@@ -164,10 +166,31 @@
           })
         });
 
-        const data = await response.json();
+        let data = await response.json();
+
+        // Als corsproxy.io een keyless-fout geeft, gebruik een alternatieve proxy
+        if (data.detail === "keyless_legacy_url" || data.error) {
+          const altProxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetEndpoint);
+          response = await fetch(altProxy, {
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + API_TOKEN,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              version: "c87eec610ab5800070c58977739717d121542dded30f2bb00337c1a84f392289",
+              input: {
+                human_img: userBase64,
+                garm_img: clothBase64,
+                garment_des: "clothing"
+              }
+            })
+          });
+          data = await response.json();
+        }
 
         if (data.error || data.detail) {
-          alert("Melding: " + (data.error || data.detail));
+          alert("Fout bij AI: " + (data.error || data.detail));
           spinner.classList.add('hidden');
           resultImg.classList.remove('hidden');
           return;
@@ -184,11 +207,11 @@
 
     async function pollResult(getUrl) {
       const statusText = document.getElementById('status-text');
-      const proxyGet = "https://corsproxy.io/?" + encodeURIComponent(getUrl);
 
       const interval = setInterval(async () => {
         try {
-          const res = await fetch(proxyGet, {
+          const fetchUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(getUrl);
+          const res = await fetch(fetchUrl, {
             headers: { "Authorization": "Bearer " + API_TOKEN }
           });
           const result = await res.json();
