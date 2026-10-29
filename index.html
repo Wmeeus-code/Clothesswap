@@ -21,7 +21,7 @@
       </div>
       <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        Systeem Gereed
+        Systeem Online
       </div>
     </div>
   </header>
@@ -33,7 +33,7 @@
         
         <div>
           <label class="block text-sm font-bold text-stone-900 mb-2">Stap 1: Foto van jezelf</label>
-          <input type="file" id="user-upload" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-stone-200 rounded-xl p-2" onchange="previewFile(event, 'user')">
+          <input type="file" id="user-upload" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-stone-200 rounded-xl p-2" onchange="handleFileSelect(event, 'user')">
           <div class="mt-2 rounded-xl overflow-hidden hidden" id="user-preview-container">
             <img id="user-preview-img" class="w-full h-40 object-cover rounded-xl border border-stone-200">
           </div>
@@ -41,7 +41,7 @@
 
         <div>
           <label class="block text-sm font-bold text-stone-900 mb-2">Stap 2: Upload kledingstuk</label>
-          <input type="file" id="cloth-upload" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-stone-200 rounded-xl p-2" onchange="previewFile(event, 'cloth')">
+          <input type="file" id="cloth-upload" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-stone-200 rounded-xl p-2" onchange="handleFileSelect(event, 'cloth')">
           <div class="mt-2 rounded-xl overflow-hidden hidden" id="cloth-preview-container">
             <img id="cloth-preview-img" class="w-full h-40 object-cover rounded-xl border border-stone-200">
           </div>
@@ -85,53 +85,46 @@
 
   <script>
     const API_TOKEN = "r8_MQkk9iiLNryXui1KX6xDVdXrzJN3m912uWCpM";
-    let userBase64 = null;
-    let clothBase64 = null;
+    const WORKER_PROXY = "https://autumn-sun-4207.wmeeus.workers.dev";
 
-    function previewFile(event, type) {
+    let userFile = null;
+    let clothFile = null;
+
+    function handleFileSelect(event, type) {
       const file = event.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          const maxDim = 350; // Extra licht gemaakt voor snelle verzending
-          let width = img.width;
-          let height = img.height;
+      const url = URL.createObjectURL(file);
 
-          if (width > height) {
-            if (width > maxDim) { height *= maxDim / width; width = maxDim; }
-          } else {
-            if (height > maxDim) { width *= maxDim / height; height = maxDim; }
-          }
+      if (type === 'user') {
+        userFile = file;
+        document.getElementById('person-img').src = url;
+        document.getElementById('user-preview-img').src = url;
+        document.getElementById('user-preview-container').classList.remove('hidden');
+      } else {
+        clothFile = file;
+        document.getElementById('cloth-preview-img').src = url;
+        document.getElementById('cloth-preview-container').classList.remove('hidden');
+      }
+    }
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
-
-          if (type === 'user') {
-            userBase64 = dataUrl;
-            document.getElementById('person-img').src = dataUrl;
-            document.getElementById('user-preview-img').src = dataUrl;
-            document.getElementById('user-preview-container').classList.remove('hidden');
-          } else {
-            clothBase64 = dataUrl;
-            document.getElementById('cloth-preview-img').src = dataUrl;
-            document.getElementById('cloth-preview-container').classList.remove('hidden');
-          }
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+    async function uploadToTmp(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data && data.data && data.data.url) {
+        // Omzetten naar directe downloadlink voor Replicate
+        return data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+      }
+      throw new Error("Upload mislukt");
     }
 
     async function startTryOn() {
-      if (!userBase64 || !clothBase64) {
+      if (!userFile || !clothFile) {
         alert("Selecteer bij Stap 1 en Stap 2 eerst een foto!");
         return;
       }
@@ -143,13 +136,16 @@
       resultImg.classList.add('hidden');
       spinner.classList.remove('hidden');
       spinner.classList.add('flex');
-      statusText.innerText = "Verbinding maken met AI...";
-
-      // Directe proxy via api.codetabs.com (CORS omzeiling zonder key)
-      const targetEndpoint = "https://api.replicate.com/v1/predictions";
-      const proxyUrl = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetEndpoint);
-
+      
       try {
+        statusText.innerText = "Foto's uploaden naar server...";
+        const humanUrl = await uploadToTmp(userFile);
+        const garmUrl = await uploadToTmp(clothFile);
+
+        statusText.innerText = "AI verzoek opstarten...";
+        const targetEndpoint = "https://api.replicate.com/v1/predictions";
+        const proxyUrl = WORKER_PROXY + "?url=" + encodeURIComponent(targetEndpoint);
+
         const response = await fetch(proxyUrl, {
           method: "POST",
           headers: {
@@ -159,8 +155,8 @@
           body: JSON.stringify({
             version: "c87eec610ab5800070c58977739717d121542dded30f2bb00337c1a84f392289",
             input: {
-              human_img: userBase64,
-              garm_img: clothBase64,
+              human_img: humanUrl,
+              garm_img: garmUrl,
               garment_des: "clothing"
             }
           })
@@ -186,7 +182,7 @@
 
     async function pollResult(getUrl) {
       const statusText = document.getElementById('status-text');
-      const pollProxyUrl = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(getUrl);
+      const pollProxyUrl = WORKER_PROXY + "?url=" + encodeURIComponent(getUrl);
 
       const interval = setInterval(async () => {
         try {
