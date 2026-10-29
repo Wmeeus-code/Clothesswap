@@ -21,14 +21,14 @@
       </div>
       <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        API Verbonden
+        API Actief
       </div>
     </div>
   </header>
 
   <main class="max-w-6xl mx-auto px-4 py-6">
     
-    <!-- API Token Invoervak -->
+    <!-- Token Invoer -->
     <div id="token-banner" class="bg-stone-900 text-white p-4 rounded-2xl mb-6 shadow-sm">
       <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-emerald-400">Replicate API Token</label>
       <div class="flex gap-2">
@@ -98,7 +98,6 @@
   <script>
     let userBase64 = null;
     let clothBase64 = null;
-    const PROXY_URL = "https://corsproxy.io/?";
 
     window.onload = function() {
       const savedToken = localStorage.getItem('replicate_token');
@@ -126,7 +125,7 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          const maxDim = 800;
+          const maxDim = 512;
           let width = img.width;
           let height = img.height;
 
@@ -147,7 +146,7 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
           if (type === 'user') {
             userBase64 = resizedBase64;
@@ -186,8 +185,7 @@
       statusText.innerText = "Verzoek naar AI-server sturen...";
 
       try {
-        const targetUrl = "https://api.replicate.com/v1/predictions";
-        const response = await fetch(PROXY_URL + targetUrl, {
+        const response = await fetch("https://corsproxy.io/?" + encodeURIComponent("https://api.replicate.com/v1/predictions"), {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -226,7 +224,7 @@
       
       const interval = setInterval(async () => {
         try {
-          const res = await fetch(PROXY_URL + getUrl, {
+          const res = await fetch("https://corsproxy.io/?" + encodeURIComponent(getUrl), {
             headers: { "Authorization": `Bearer ${token}` }
           });
           const prediction = await res.json();
@@ -247,7 +245,7 @@
             statusText.innerText = "AI berekent pasvorm... (" + prediction.status + ")";
           }
         } catch (e) {
-          // Tijdelijke polling-fouten negeren
+          // Tijdelijke fouten negeren
         }
       }, 3000);
     }
