@@ -84,6 +84,8 @@
   </main>
 
   <script>
+    const API_TOKEN = "R8_TNeojaogU7ytZAfJl1sV8re2hZezQDI0HiC5g";
+
     let userFile = null;
     let clothFile = null;
 
@@ -177,7 +179,7 @@
       const interval = setInterval(async () => {
         try {
           const res = await fetch(getUrl, {
-            headers: { "Authorization": "Bearer r8_MQkk9iiLNryXui1KX6xDVdXrzJN3m912uWCpM" }
+            headers: { "Authorization": "Bearer " + API_TOKEN }
           });
           const result = await res.json();
 
