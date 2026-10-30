@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   const API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
-  // Status opvragen (GET)
+  // Status check (GET verzoek)
   if (req.method === 'GET') {
     const { getUrl } = req.query;
     if (!getUrl) return res.status(400).json({ error: 'Missing getUrl' });
@@ -25,17 +25,16 @@ export default async function handler(req, res) {
     }
   }
 
-  // AI-pasbeurt starten (POST)
+  // Start verzoek (POST verzoek via officieel model endpoint)
   if (req.method === 'POST') {
     try {
-      const response = await fetch("https://api.replicate.com/v1/predictions", {
+      const response = await fetch("https://api.replicate.com/v1/models/yisol/idm-vton/predictions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${API_TOKEN}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          version: "c87eec610ab5800070c58977739717d121542dded30f2bb00337c1a84f392289",
           input: req.body.input
         })
       });
