@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   const API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
-  // Status check (GET verzoek)
+  // Status check (GET)
   if (req.method === 'GET') {
     const { getUrl } = req.query;
     if (!getUrl) return res.status(400).json({ error: 'Missing getUrl' });
@@ -25,23 +25,24 @@ export default async function handler(req, res) {
     }
   }
 
-  // Start verzoek (POST verzoek via het officiële yisol/idm-vton endpoint)
+  // AI-pasbeurt starten (POST)
   if (req.method === 'POST') {
     try {
-      const response = await fetch("https://api.replicate.com/v1/models/yisol/idm-vton/predictions", {
+      const response = await fetch("https://api.replicate.com/v1/predictions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${API_TOKEN}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          version: "c87eec610ab5800070c58977739717d121542dded30f2bb00337c1a84f392289",
           input: {
             crop: false,
             seed: 42,
             category: "upper_body",
             force_dc: false,
-            garm_img: req.body.input.garm_img,
-            human_img: req.body.input.human_img,
+            garm_img: req.body.input ? req.body.input.garm_img : req.body.garm_img,
+            human_img: req.body.input ? req.body.input.human_img : req.body.human_img,
             garment_des: "clothing"
           }
         })
