@@ -25,24 +25,26 @@ export default async function handler(req, res) {
     }
   }
 
-  // AI-pasbeurt starten (POST)
+  // AI-pasbeurt starten (POST via het officiële model-endpoint)
   if (req.method === 'POST') {
     try {
-      const response = await fetch("https://api.replicate.com/v1/predictions", {
+      const humanImg = req.body.input ? req.body.input.human_img : req.body.human_img;
+      const garmImg = req.body.input ? req.body.input.garm_img : req.body.garm_img;
+
+      const response = await fetch("https://api.replicate.com/v1/models/yisol/idm-vton/predictions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${API_TOKEN}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          version: "c87eec610ab5800070c58977739717d121542dded30f2bb00337c1a84f392289",
           input: {
             crop: false,
             seed: 42,
             category: "upper_body",
             force_dc: false,
-            garm_img: req.body.input ? req.body.input.garm_img : req.body.garm_img,
-            human_img: req.body.input ? req.body.input.human_img : req.body.human_img,
+            garm_img: garmImg,
+            human_img: humanImg,
             garment_des: "clothing"
           }
         })
