@@ -25,17 +25,27 @@ export default async function handler(req, res) {
     }
   }
 
-  // Start verzoek (POST verzoek via officieel model endpoint)
+  // Start verzoek (POST verzoek met de actieve IDM-VTON versie)
   if (req.method === 'POST') {
     try {
-      const response = await fetch("https://api.replicate.com/v1/models/yisol/idm-vton/predictions", {
+      const response = await fetch("https://api.replicate.com/v1/predictions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${API_TOKEN}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          input: req.body.input
+          version: "c87eec610ab5800070c58977739717d121542dded30f2bb00337c1a84f392289",
+          input: {
+            crop: false,
+            seed: 42,
+            category: "upper_body",
+            force_dc: false,
+            garm_img: req.body.input.garm_img,
+            human_img: req.body.input.human_img,
+            mask_img: "https://raw.githubusercontent.com/yisol/IDM-VTON/main/example/densepose/00008_00.png",
+            garment_des: "clothing"
+          }
         })
       });
 
